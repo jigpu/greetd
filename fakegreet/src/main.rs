@@ -32,6 +32,7 @@ fn wrap_result<T>(res: Result<T, Error>) -> Response {
 struct InnerContext {
     user: Option<String>,
     password: Option<String>,
+    session_type: Option<String>,
     ok: bool,
 }
 
@@ -45,13 +46,15 @@ impl Context {
             inner: RefCell::new(InnerContext {
                 user: None,
                 password: None,
+                session_type: None,
                 ok: false,
             }),
         }
     }
 
-    async fn create_session(&self, username: String) -> Result<(), Error> {
+    async fn create_session(&self, username: String, session_type: Option<String>) -> Result<(), Error> {
         self.inner.borrow_mut().user = Some(username);
+        self.inner.borrow_mut().session_type = session_type;
         Ok(())
     }
 
@@ -127,7 +130,7 @@ async fn client_handler(ctx: &Context, mut s: UnixStream) -> Result<(), Error> {
 
         println!("req: {:?}", req);
         let resp = match req {
-            Request::CreateSession { username } => match ctx.create_session(username).await {
+            Request::CreateSession { username, session_type } => match ctx.create_session(username, session_type).await {
                 Ok(()) => client_get_question(&ctx).await,
                 res => wrap_result(res),
             },

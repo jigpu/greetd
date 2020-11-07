@@ -14,3 +14,8 @@ command = "agreety --cmd $SHELL"
 # on the greeter. A graphical greeter may for example require the user to be
 # in the `video` group.
 user = "greeter"
+
+# The type of session used by the greeter. A text-mode greeter should use
+# the "tty" type, while graphical greeters should use "x11" or "wayland"
+# as appropriate.
+session_type = "tty"

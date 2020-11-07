@@ -11,7 +11,7 @@
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     let mut stream = UnixStream::connect(env::var("GREETD_SOCK")?).await?;
-//!     Request::CreateSession { username: "john".to_string() }.write_to(&mut stream).await?;
+//!     Request::CreateSession { username: "john".to_string(), session_type: Some("wayland".to_string()) }.write_to(&mut stream).await?;
 //!     let resp = Response::read_from(&mut stream).await?;
 //!     Ok(())
 //! }

@@ -52,6 +52,12 @@ This section describes the default session, also referred to as the *greeter*.
 *user* = user
 	The user to use for running the greeter. Defaults to "greeter".
 
+*session_type* = type
+	The type of session to create for the default session. This should be set
+	to "tty" for a text-mode greeter like agreety, or to "x11", "wayland",
+	or "mir" for a graphical greeter. If a session type is not explicitly
+	set, the value "unspecified" will be used.
+
 ## initial_session
 
 This optional section describes the initial session, commonly referred to as
@@ -65,6 +71,12 @@ This optional section describes the initial session, commonly referred to as
 *user* = user
 	The user to use for running the initial session.
 
+*session_type* = type
+	The type of session to create for the initial session. This should be set
+	to "tty" if starting a shell, or to "x11", "wayland", or "mir" if launching
+	a graphical session. If a session type is not explicitly set, the value
+	"unspecified" will be used.
+
 # EXAMPLES
 
 ## Regular setup with agreety and sway
@@ -75,6 +87,7 @@ vt = 1
 
 [default_session]
 command = "agreety -c sway"
+session_type = "tty"
 ```
 
 ## Auto-login
@@ -85,10 +98,12 @@ vt = 1
 
 [default_session]
 command = "agreety -c sway"
+session_type = "tty"
 
 [initial_session]
 command = "sway"
 user = "john"
+session_type = "wayland"
 ```
 
 # AUTHORS

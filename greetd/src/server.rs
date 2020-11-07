@@ -64,7 +64,7 @@ async fn client_handler(ctx: &Context, mut s: UnixStream) -> Result<(), Error> {
         };
 
         let resp = match req {
-            Request::CreateSession { username } => match ctx.create_session(username).await {
+            Request::CreateSession { username, session_type } => match ctx.create_session(username, session_type).await {
                 Ok(()) => client_get_question(&ctx).await,
                 res => wrap_result(res),
             },
@@ -218,13 +218,14 @@ pub async fn main(config: Config) -> Result<(), Error> {
     let ctx = Rc::new(Context::new(
         config.file.default_session.command,
         config.file.default_session.user,
+        config.file.default_session.session_type,
         greeter_service.to_string(),
         service.to_string(),
         term_mode.clone(),
     ));
 
     if let Some(s) = config.file.initial_session {
-        if let Err(e) = ctx.start_user_session(&s.user, vec![s.command]).await {
+        if let Err(e) = ctx.start_user_session(&s.user, &s.session_type, vec![s.command]).await {
             eprintln!("unable to start greeter: {}", e);
             reset_vt(&term_mode).map_err(|e| format!("unable to reset VT: {}", e))?;
 

@@ -23,6 +23,7 @@ impl Default for VtSelection {
 pub struct ConfigSession {
     pub command: String,
     pub user: String,
+    pub session_type: String,
 }
 
 #[derive(Debug, Eq, PartialEq, Default)]
@@ -88,6 +89,7 @@ fn parse_old_config(config: &HashMap<&str, HashMap<&str, &str>>) -> Result<Confi
     Ok(ConfigFile {
         terminal: ConfigTerminal { vt },
         default_session: ConfigSession {
+            session_type: "unspecified".to_string(),
             user: greeter_user,
             command: greeter,
         },
@@ -108,7 +110,11 @@ fn parse_new_config(config: &HashMap<&str, HashMap<&str, &str>>) -> Result<Confi
             let user = maybe_unquote(userstr)
                 .map_err(|e| format!("unable to read default_session.user: {}", e))?;
 
-            Ok(ConfigSession { command, user })
+            let session_typestr = section.get("session_type").unwrap_or(&"unspecified");
+            let session_type = maybe_unquote(session_typestr)
+                .map_err(|e| format!("unable to read default_session.session_type: {}", e))?;
+
+            Ok(ConfigSession { command, user, session_type })
         }
         None => Err("no default_session specified"),
     }?;
@@ -127,7 +133,13 @@ fn parse_new_config(config: &HashMap<&str, HashMap<&str, &str>>) -> Result<Confi
             let user = maybe_unquote(userstr)
                 .map_err(|e| format!("unable to read initial_session.user: {}", e))?;
 
-            Some(ConfigSession { command, user })
+            let session_typestr = section
+                .get("session_type")
+                .unwrap_or(&"unspecified");
+            let session_type = maybe_unquote(session_typestr)
+                .map_err(|e| format!("unable to read initial_session.session_type: {}", e))?;
+
+            Some(ConfigSession { command, user, session_type })
         }
         None => None,
     };
@@ -266,6 +278,7 @@ greeter_user = \"greeter\"
                 default_session: ConfigSession {
                     command: "agreety".to_string(),
                     user: "greeter".to_string(),
+                    session_type: "unspecified".to_string(),
                 },
                 initial_session: None,
             }
@@ -287,6 +300,7 @@ greeter = \"agreety\"
                 default_session: ConfigSession {
                     command: "agreety".to_string(),
                     user: "greeter".to_string(),
+                    session_type: "unspecified".to_string(),
                 },
                 initial_session: None,
             }
@@ -313,6 +327,31 @@ command = \"agreety\"
                 default_session: ConfigSession {
                     command: "agreety".to_string(),
                     user: "greeter".to_string(),
+                    session_type: "unspecified".to_string(),
+                },
+                initial_session: None,
+            }
+        );
+        let config = parse_config(
+            "
+[terminal]
+vt = 1
+[default_session]
+command = \"agreety\"
+session_type = \"tty\"
+",
+        )
+        .expect("config didn't parse");
+        assert_eq!(
+            config,
+            ConfigFile {
+                terminal: ConfigTerminal {
+                    vt: VtSelection::Specific(1)
+                },
+                default_session: ConfigSession {
+                    command: "agreety".to_string(),
+                    user: "greeter".to_string(),
+                    session_type: "tty".to_string(),
                 },
                 initial_session: None,
             }
@@ -339,10 +378,40 @@ user = \"john\"
                 default_session: ConfigSession {
                     command: "agreety".to_string(),
                     user: "greeter".to_string(),
+                    session_type: "unspecified".to_string(),
                 },
                 initial_session: Some(ConfigSession {
                     command: "sway".to_string(),
                     user: "john".to_string(),
+                    session_type: "unspecified".to_string(),
+                }),
+            }
+        );
+        let config = parse_config(
+            "
+[terminal]\nvt = 1\n[default_session]\ncommand = \"agreety\"
+[initial_session]
+command = \"sway\"
+user = \"john\"
+session_type = \"wayland\"
+",
+        )
+        .expect("config didn't parse");
+        assert_eq!(
+            config,
+            ConfigFile {
+                terminal: ConfigTerminal {
+                    vt: VtSelection::Specific(1)
+                },
+                default_session: ConfigSession {
+                    command: "agreety".to_string(),
+                    user: "greeter".to_string(),
+                    session_type: "unspecified".to_string(),
+                },
+                initial_session: Some(ConfigSession {
+                    command: "sway".to_string(),
+                    user: "john".to_string(),
+                    session_type: "wayland".to_string(),
                 }),
             }
         );
@@ -367,6 +436,7 @@ vt = 1
                 default_session: ConfigSession {
                     command: "agreety".to_string(),
                     user: "greeter".to_string(),
+                    session_type: "unspecified".to_string(),
                 },
                 initial_session: None,
             }
@@ -388,6 +458,7 @@ vt = next
                 default_session: ConfigSession {
                     command: "agreety".to_string(),
                     user: "greeter".to_string(),
+                    session_type: "unspecified".to_string(),
                 },
                 initial_session: None,
             }
@@ -409,6 +480,7 @@ vt = current
                 default_session: ConfigSession {
                     command: "agreety".to_string(),
                     user: "greeter".to_string(),
+                    session_type: "unspecified".to_string(),
                 },
                 initial_session: None,
             }

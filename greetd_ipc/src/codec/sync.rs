@@ -10,7 +10,7 @@
 //!
 //! fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     let mut stream = UnixStream::connect(env::var("GREETD_SOCK")?)?;
-//!     Request::CreateSession { username: "john".to_string() }.write_to(&mut stream)?;
+//!     Request::CreateSession { username: "john".to_string(), session_type: Some("wayland".to_string()) }.write_to(&mut stream)?;
 //!     let resp = Response::read_from(&mut stream)?;
 //!     Ok(())
 //! }

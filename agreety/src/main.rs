@@ -72,7 +72,7 @@ fn login(node: &str, cmd: &mut Option<String>) -> Result<LoginResult, Box<dyn st
 
     let mut stream = UnixStream::connect(env::var("GREETD_SOCK")?)?;
 
-    let mut next_request = Request::CreateSession { username };
+    let mut next_request = Request::CreateSession { username: username, session_type: Some("tty".to_string()) };
     let mut starting = false;
     loop {
         next_request.write_to(&mut stream)?;

@@ -134,6 +134,7 @@ impl Session {
         &mut self,
         service: &str,
         class: &str,
+        session_type: &str,
         user: &str,
         authenticate: bool,
         term_mode: &TerminalMode,
@@ -141,6 +142,7 @@ impl Session {
         let msg = ParentToSessionChild::InitiateLogin {
             service: service.to_string(),
             class: class.to_string(),
+            session_type: session_type.to_string(),
             user: user.to_string(),
             authenticate,
             tty: term_mode.clone(),

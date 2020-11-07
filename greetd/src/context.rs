@@ -37,6 +37,7 @@ pub struct Context {
     inner: RwLock<ContextInner>,
     greeter_bin: String,
     greeter_user: String,
+    greeter_session_type: String,
     greeter_service: String,
     pam_service: String,
     term_mode: TerminalMode,
@@ -46,6 +47,7 @@ impl Context {
     pub fn new(
         greeter_bin: String,
         greeter_user: String,
+        greeter_session_type: String,
         greeter_service: String,
         pam_service: String,
         term_mode: TerminalMode,
@@ -58,6 +60,7 @@ impl Context {
             }),
             greeter_bin,
             greeter_user,
+            greeter_session_type,
             greeter_service,
             pam_service,
             term_mode,
@@ -70,13 +73,14 @@ impl Context {
     async fn start_unauthenticated_session(
         &self,
         class: &str,
+        session_type: &str,
         user: &str,
         service: &str,
         cmd: Vec<String>,
     ) -> Result<SessionChild, Error> {
         let mut scheduled_session = Session::new_external()?;
         scheduled_session
-            .initiate(&service, class, user, false, &self.term_mode)
+            .initiate(&service, class, session_type, user, false, &self.term_mode)
             .await?;
         loop {
             match scheduled_session.get_state().await {
@@ -96,6 +100,7 @@ impl Context {
     async fn start_greeter(&self) -> Result<SessionChild, Error> {
         self.start_unauthenticated_session(
             "greeter",
+            &self.greeter_session_type,
             &self.greeter_user,
             &self.greeter_service,
             vec![self.greeter_bin.to_string()],
@@ -122,7 +127,7 @@ impl Context {
     }
 
     /// Directly start an initial session, bypassing the normal scheduling.
-    pub async fn start_user_session(&self, user: &str, cmd: Vec<String>) -> Result<(), Error> {
+    pub async fn start_user_session(&self, user: &str, session_type: &str, cmd: Vec<String>) -> Result<(), Error> {
         {
             let inner = self.inner.read().await;
             if inner.current.is_some() {
@@ -133,7 +138,7 @@ impl Context {
         let mut inner = self.inner.write().await;
         inner.current = Some(SessionChildSet {
             child: self
-                .start_unauthenticated_session("user", user, &self.pam_service, cmd)
+                .start_unauthenticated_session("user", session_type, user, &self.pam_service, cmd)
                 .await?,
             time: Instant::now(),
             is_greeter: false,
@@ -142,7 +147,7 @@ impl Context {
     }
 
     /// Create a new session for configuration.
-    pub async fn create_session(&self, username: String) -> Result<(), Error> {
+    pub async fn create_session(&self, username: String, session_type: Option<String>) -> Result<(), Error> {
         {
             let inner = self.inner.read().await;
             if inner.current.is_none() {
@@ -156,13 +161,15 @@ impl Context {
             }
         }
 
+        let session_typestr = session_type.unwrap_or("unspecified".to_string());
+
         let mut session_set = SessionSet {
             session: Session::new_external()?,
             time: Instant::now(),
         };
         session_set
             .session
-            .initiate(&self.pam_service, "user", &username, true, &self.term_mode)
+            .initiate(&self.pam_service, "user", &session_typestr, &username, true, &self.term_mode)
             .await?;
 
         let mut session = Some(session_set);

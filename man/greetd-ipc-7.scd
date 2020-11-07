@@ -40,8 +40,8 @@ following hexdump:
 :[ *FIELDS*
 :< *PURPOSE*
 |  create_session
-:  username (string)
-:  Creates a session and initiates a login attempted for the given user. The session is ready to be started if a success is returned.
+:  username (string), session_type (string, optional)
+:  Creates a session and initiates a login attempted for the given user. The session is ready to be started if a success is returned. If the session type is not provided, the default value "unspecified" will be used.
 |  post_auth_message_response
 :  response (string, optional)
 :  Answers an authentication message. If the message was informative (info, error), then a response does not need to be set in this message. The session is ready to be started if a success is returned.

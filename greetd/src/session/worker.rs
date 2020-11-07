@@ -37,6 +37,7 @@ pub enum ParentToSessionChild {
     InitiateLogin {
         service: String,
         class: String,
+        session_type: String,
         user: String,
         authenticate: bool,
         tty: TerminalMode,
@@ -80,14 +81,15 @@ impl SessionChildToParent {
 /// responsible for the entirety of the session setup and execution. It is
 /// started by Session::start.
 fn worker(sock: &UnixDatagram) -> Result<(), Error> {
-    let (service, class, user, authenticate, tty) = match ParentToSessionChild::recv(sock)? {
+    let (service, class, session_type, user, authenticate, tty) = match ParentToSessionChild::recv(sock)? {
         ParentToSessionChild::InitiateLogin {
             service,
             class,
+            session_type,
             user,
             authenticate,
             tty,
-        } => (service, class, user, authenticate, tty),
+        } => (service, class, session_type, user, authenticate, tty),
         ParentToSessionChild::Cancel => return Err("cancelled".into()),
         msg => return Err(format!("expected InitiateLogin or Cancel, got: {:?}", msg).into()),
     };
@@ -185,6 +187,7 @@ fn worker(sock: &UnixDatagram) -> Result<(), Error> {
     let prepared_env = [
         "XDG_SEAT=seat0".to_string(),
         format!("XDG_SESSION_CLASS={}", class),
+        format!("XDG_SESSION_TYPE={}", session_type),
         format!("USER={}", username),
         format!("LOGNAME={}", username),
         format!("HOME={}", home),

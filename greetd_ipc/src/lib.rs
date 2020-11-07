@@ -63,7 +63,7 @@ pub enum Request {
     /// If a login flow needs to be aborted at any point, send
     /// Request::CancelSession. Note that the session is cancelled
     /// automatically on error.
-    CreateSession { username: String },
+    CreateSession { username: String, session_type: Option<String> },
 
     /// PostAuthMessageResponse responds to the last auth message, and returns
     /// either a Response::AuthMessage, Response::Success or Response::Failure.
